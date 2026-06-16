@@ -3,337 +3,489 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>五子棋 AI 对战</title>
+  <title>图片转视频工作台</title>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07070b;
+      --panel: rgba(18, 18, 28, 0.78);
+      --panel-strong: rgba(29, 28, 42, 0.92);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f7f2ff;
+      --muted: #b9b1c9;
+      --accent: #a259ff;
+      --accent-2: #ff5bc8;
+      --ok: #56f0b2;
+    }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: Arial, "Microsoft YaHei", sans-serif;
-      background: #f3efe3;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 18px;
-      color: #222;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(162, 89, 255, 0.36), transparent 34%),
+        radial-gradient(circle at 82% 8%, rgba(255, 91, 200, 0.22), transparent 30%),
+        linear-gradient(135deg, #050507 0%, #11111c 52%, #06060a 100%);
+      padding: 24px;
     }
+
     .app {
-      width: min(96vw, 980px);
+      width: min(1180px, 100%);
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 260px;
-      gap: 18px;
+      grid-template-columns: minmax(320px, 1fr) 360px;
+      gap: 22px;
       align-items: start;
     }
-    .board-wrap {
-      overflow: auto;
-      background: #d9a94b;
-      border: 6px solid #8b5a18;
-      border-radius: 12px;
-      padding: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,.18);
+
+    .hero, .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
     }
+
+    .hero { padding: 18px; }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      min-height: 70vh;
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
+        #090910;
+    }
+
     canvas {
-      display: block;
-      background: #d8a84b;
-      cursor: pointer;
-      touch-action: manipulation;
+      width: min(100%, 430px);
+      max-height: 76vh;
+      aspect-ratio: 9 / 16;
+      border-radius: 24px;
+      background: #111;
+      box-shadow: 0 30px 70px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.1);
     }
-    .panel {
-      background: #fffaf0;
-      border: 1px solid #d7c391;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+
+    .drop-hint {
+      position: absolute;
+      inset: auto 18px 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.48);
+      color: var(--muted);
+      font-size: 13px;
     }
-    h1 { margin: 0 0 12px; font-size: 24px; }
-    .status {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 12px 0;
-      min-height: 52px;
-      line-height: 1.45;
-    }
-    button, select {
-      width: 100%;
-      padding: 11px 12px;
-      border-radius: 8px;
-      border: 1px solid #b59a5a;
-      background: white;
-      margin-top: 10px;
-      font-size: 15px;
-    }
-    button {
-      background: #222;
-      color: white;
-      cursor: pointer;
+
+    .badge {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(86, 240, 178, .14);
+      color: var(--ok);
+      white-space: nowrap;
       font-weight: 700;
     }
-    button:hover { opacity: .9; }
-    .tip {
-      margin-top: 14px;
-      line-height: 1.6;
-      font-size: 14px;
-      color: #555;
+
+    .panel { padding: 22px; }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 44px);
+      letter-spacing: -0.04em;
+      line-height: 1;
     }
-    .score {
-      margin-top: 14px;
-      padding: 10px;
-      border-radius: 8px;
-      background: #f5edd9;
-      font-size: 14px;
+
+    .lead {
+      margin: 0 0 22px;
+      color: var(--muted);
       line-height: 1.7;
     }
-    @media (max-width: 820px) {
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      color: #ded7ef;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    input, select, button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 12px 13px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.07);
+      font: inherit;
+      outline: none;
+    }
+
+    input[type="file"] { cursor: pointer; }
+
+    button {
+      margin-top: 14px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 850;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 14px 30px rgba(162, 89, 255, .28);
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+
+    .secondary {
+      background: rgba(255,255,255,.1);
+      box-shadow: none;
+    }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .status {
+      margin-top: 16px;
+      padding: 13px 14px;
+      min-height: 48px;
+      border-radius: 16px;
+      background: var(--panel-strong);
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .download {
+      display: none;
+      margin-top: 14px;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      padding: 12px 13px;
+      border-radius: 15px;
+      color: #07110d;
+      background: var(--ok);
+      font-weight: 900;
+    }
+
+    .tips {
+      margin-top: 18px;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    @media (max-width: 880px) {
+      body { padding: 14px; }
       .app { grid-template-columns: 1fr; }
       .panel { order: -1; }
+      .stage { min-height: 58vh; }
+      canvas { width: min(100%, 360px); }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="board-wrap">
-      <canvas id="board" width="760" height="760"></canvas>
-    </div>
-    <div class="panel">
-      <h1>五子棋 AI 对战</h1>
-      <div class="status" id="status">你执黑先手。点击棋盘落子。</div>
-      <label>棋盘大小</label>
-      <select id="sizeSelect">
-        <option value="15">15 × 15 标准</option>
-        <option value="19" selected>19 × 19 大棋盘</option>
-        <option value="21">21 × 21 超大棋盘</option>
-      </select>
-      <button id="restart">重新开始</button>
-      <button id="undo">悔一步</button>
-      <div class="score">
-        黑棋：你<br />白棋：AI<br />目标：横、竖、斜任意方向连成 5 子。
+  <main class="app">
+    <section class="hero" aria-label="视频预览">
+      <div class="stage">
+        <canvas id="preview" width="1080" height="1920"></canvas>
+        <div class="drop-hint">
+          <span>上传照片后，会自动生成 9:16 竖屏动态视频效果。</span>
+          <span class="badge" id="timeBadge">8s</span>
+        </div>
       </div>
-      <div class="tip">
-        说明：这个 AI 不是摆设，会优先堵你的四连、三连，也会寻找自己的进攻点。你先练基本胜负判断，别急着追求复杂算法。
+    </section>
+
+    <aside class="panel">
+      <h1>把照片做成视频</h1>
+      <p class="lead">适合朋友圈、抖音、小红书：给照片加轻微推进、夜景光晕、胶片颗粒和标题，直接导出 WebM 短视频。</p>
+
+      <label for="photoInput">选择照片</label>
+      <input id="photoInput" type="file" accept="image/*" />
+
+      <label for="titleInput">视频标题</label>
+      <input id="titleInput" value="夜色里的方向盘" maxlength="24" />
+
+      <div class="grid">
+        <div>
+          <label for="durationSelect">时长</label>
+          <select id="durationSelect">
+            <option value="6">6 秒</option>
+            <option value="8" selected>8 秒</option>
+            <option value="12">12 秒</option>
+          </select>
+        </div>
+        <div>
+          <label for="styleSelect">风格</label>
+          <select id="styleSelect">
+            <option value="cinematic" selected>电影感</option>
+            <option value="neon">霓虹</option>
+            <option value="soft">柔和</option>
+          </select>
+        </div>
       </div>
-    </div>
-  </div>
+
+      <button id="playBtn" type="button">预览动画</button>
+      <button id="recordBtn" type="button">导出视频 WebM</button>
+      <button id="resetBtn" class="secondary" type="button">恢复默认画面</button>
+      <a id="downloadLink" class="download" download="photo-video.webm">下载视频</a>
+
+      <div id="status" class="status">请先选择你发来的那张照片，然后点“预览动画”或“导出视频”。</div>
+      <ul class="tips">
+        <li>导出时请保持页面打开，浏览器会实时录制画布。</li>
+        <li>如果需要 MP4，可下载 WebM 后用剪映、QuickTime 或 ffmpeg 转码。</li>
+      </ul>
+    </aside>
+  </main>
 
 <script>
-const canvas = document.getElementById('board');
+const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
+const photoInput = document.getElementById('photoInput');
+const titleInput = document.getElementById('titleInput');
+const durationSelect = document.getElementById('durationSelect');
+const styleSelect = document.getElementById('styleSelect');
+const playBtn = document.getElementById('playBtn');
+const recordBtn = document.getElementById('recordBtn');
+const resetBtn = document.getElementById('resetBtn');
 const statusEl = document.getElementById('status');
-const restartBtn = document.getElementById('restart');
-const undoBtn = document.getElementById('undo');
-const sizeSelect = document.getElementById('sizeSelect');
+const downloadLink = document.getElementById('downloadLink');
+const timeBadge = document.getElementById('timeBadge');
 
-let size = Number(sizeSelect.value);
-let cell, margin;
-let board = [];
-let gameOver = false;
-let thinking = false;
-let history = [];
+const W = canvas.width;
+const H = canvas.height;
+let image = null;
+let imageUrl = '';
+let animationStart = 0;
+let playing = true;
+let recording = false;
 
-function init() {
-  size = Number(sizeSelect.value);
-  board = Array.from({ length: size }, () => Array(size).fill(0));
-  history = [];
-  gameOver = false;
-  thinking = false;
-  resizeBoard();
-  statusEl.textContent = '你执黑先手。点击棋盘落子。';
-  draw();
-}
+function setStatus(message) { statusEl.textContent = message; }
 
-function resizeBoard() {
-  const cssSize = Math.min(760, Math.max(520, window.innerWidth - 60));
-  canvas.width = cssSize;
-  canvas.height = cssSize;
-  margin = cssSize * 0.055;
-  cell = (cssSize - margin * 2) / (size - 1);
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#d8a84b';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.strokeStyle = '#3b2610';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < size; i++) {
-    const p = margin + i * cell;
-    ctx.beginPath();
-    ctx.moveTo(margin, p);
-    ctx.lineTo(canvas.width - margin, p);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(p, margin);
-    ctx.lineTo(p, canvas.height - margin);
-    ctx.stroke();
-  }
-
-  const stars = getStars();
-  ctx.fillStyle = '#3b2610';
-  stars.forEach(([x, y]) => {
-    ctx.beginPath();
-    ctx.arc(margin + x * cell, margin + y * cell, 4, 0, Math.PI * 2);
-    ctx.fill();
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
   });
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (board[y][x]) drawStone(x, y, board[y][x]);
-    }
-  }
 }
 
-function getStars() {
-  if (size === 15) return [[3,3],[11,3],[7,7],[3,11],[11,11]];
-  if (size === 19) return [[3,3],[9,3],[15,3],[3,9],[9,9],[15,9],[3,15],[9,15],[15,15]];
-  return [[3,3],[10,3],[17,3],[3,10],[10,10],[17,10],[3,17],[10,17],[17,17]];
-}
-
-function drawStone(x, y, player) {
-  const px = margin + x * cell;
-  const py = margin + y * cell;
-  const r = cell * 0.42;
-  const g = ctx.createRadialGradient(px - r/3, py - r/3, r/6, px, py, r);
-  if (player === 1) {
-    g.addColorStop(0, '#666');
-    g.addColorStop(1, '#000');
+function drawCoverImage(img, scaleBoost = 1, offsetX = 0, offsetY = 0) {
+  const imageRatio = img.width / img.height;
+  const canvasRatio = W / H;
+  let dw, dh;
+  if (imageRatio > canvasRatio) {
+    dh = H * scaleBoost;
+    dw = dh * imageRatio;
   } else {
-    g.addColorStop(0, '#fff');
-    g.addColorStop(1, '#cfcfcf');
+    dw = W * scaleBoost;
+    dh = dw / imageRatio;
   }
-  ctx.fillStyle = g;
+  const dx = (W - dw) / 2 + offsetX;
+  const dy = (H - dh) / 2 + offsetY;
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+function roundedRect(x, y, width, height, radius) {
   ctx.beginPath();
-  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+}
+
+function drawPlaceholder(t) {
+  const hueShift = Math.sin(t * Math.PI * 2) * 18;
+  const gradient = ctx.createLinearGradient(0, 0, W, H);
+  gradient.addColorStop(0, `hsl(${260 + hueShift} 76% 14%)`);
+  gradient.addColorStop(0.55, '#0d0d16');
+  gradient.addColorStop(1, `hsl(${318 - hueShift} 70% 18%)`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(W / 2, H / 2 - 60);
+  ctx.rotate(-0.05 + Math.sin(t * Math.PI * 2) * 0.015);
+  roundedRect(-310, -460, 620, 920, 42);
+  ctx.fillStyle = 'rgba(255,255,255,.08)';
   ctx.fill();
-  ctx.strokeStyle = player === 1 ? '#111' : '#aaa';
+  ctx.strokeStyle = 'rgba(255,255,255,.22)';
+  ctx.lineWidth = 4;
   ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.font = '800 58px Microsoft YaHei, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('上传照片生成视频', W / 2, H / 2 - 20);
+  ctx.fillStyle = 'rgba(255,255,255,.58)';
+  ctx.font = '34px Microsoft YaHei, sans-serif';
+  ctx.fillText('Upload your photo', W / 2, H / 2 + 42);
 }
 
-canvas.addEventListener('click', (e) => {
-  if (gameOver || thinking) return;
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.round((e.clientX - rect.left - margin) / cell);
-  const y = Math.round((e.clientY - rect.top - margin) / cell);
-  if (!inBoard(x, y) || board[y][x] !== 0) return;
-  move(x, y, 1);
-  if (checkWin(x, y, 1)) return endGame('你赢了。AI 这局被你打穿了。');
-  thinking = true;
-  statusEl.textContent = 'AI 正在思考...';
-  setTimeout(aiMove, 180);
+function drawEffects(t, style) {
+  const vignette = ctx.createRadialGradient(W / 2, H / 2, H * 0.18, W / 2, H / 2, H * 0.72);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(0.68, 'rgba(0,0,0,.08)');
+  vignette.addColorStop(1, 'rgba(0,0,0,.62)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
+
+  const colors = {
+    cinematic: ['rgba(162,89,255,.38)', 'rgba(255,183,77,.18)'],
+    neon: ['rgba(255,54,196,.48)', 'rgba(0,209,255,.30)'],
+    soft: ['rgba(255,214,226,.35)', 'rgba(151,206,255,.22)']
+  }[style];
+
+  ctx.globalCompositeOperation = 'screen';
+  const glow = ctx.createRadialGradient(W * .78, H * (.22 + Math.sin(t * Math.PI * 2) * .025), 20, W * .78, H * .22, 520);
+  glow.addColorStop(0, colors[0]);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  const sweepX = -W * .45 + t * W * 1.9;
+  const sweep = ctx.createLinearGradient(sweepX, 0, sweepX + W * .42, H);
+  sweep.addColorStop(0, 'rgba(255,255,255,0)');
+  sweep.addColorStop(.5, colors[1]);
+  sweep.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sweep;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+
+  ctx.fillStyle = 'rgba(255,255,255,.045)';
+  for (let i = 0; i < 95; i++) {
+    const x = (Math.sin(i * 78.233 + t * 9.1) * 0.5 + 0.5) * W;
+    const y = (Math.cos(i * 31.919 + t * 7.7) * 0.5 + 0.5) * H;
+    ctx.fillRect(x, y, 1.6, 1.6);
+  }
+}
+
+function drawText(t) {
+  const title = titleInput.value.trim() || '我的照片电影';
+  const fade = Math.min(1, Math.max(0, (t - .08) / .18)) * Math.min(1, Math.max(0, (1 - t) / .16));
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(0,0,0,.42)';
+  roundedRect(70, H - 285, W - 140, 168, 34);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '900 64px Microsoft YaHei, sans-serif';
+  ctx.fillText(title, 104, H - 202);
+  ctx.fillStyle = 'rgba(255,255,255,.72)';
+  ctx.font = '32px Microsoft YaHei, sans-serif';
+  ctx.fillText('Photo Motion Video · 9:16', 106, H - 148);
+  ctx.restore();
+}
+
+function renderFrame(now) {
+  if (!animationStart) animationStart = now;
+  const duration = Number(durationSelect.value) * 1000;
+  const elapsed = (now - animationStart) % duration;
+  const t = elapsed / duration;
+  const eased = 0.5 - Math.cos(t * Math.PI) / 2;
+
+  ctx.clearRect(0, 0, W, H);
+  if (image) {
+    const zoom = 1.08 + eased * 0.1;
+    const panX = Math.sin(t * Math.PI * 2) * 34;
+    const panY = -58 * eased;
+    drawCoverImage(image, zoom, panX, panY);
+  } else {
+    drawPlaceholder(t);
+  }
+  drawEffects(t, styleSelect.value);
+  drawText(t);
+
+  if (playing || recording) requestAnimationFrame(renderFrame);
+}
+
+function restartAnimation(message) {
+  animationStart = 0;
+  playing = true;
+  setStatus(message);
+  requestAnimationFrame(renderFrame);
+}
+
+photoInput.addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (imageUrl) URL.revokeObjectURL(imageUrl);
+  imageUrl = URL.createObjectURL(file);
+  image = await loadImage(imageUrl);
+  downloadLink.style.display = 'none';
+  restartAnimation('照片已载入。现在可以预览动画或导出视频。');
 });
 
-function move(x, y, player) {
-  board[y][x] = player;
-  history.push({x, y, player});
-  draw();
-}
-
-function aiMove() {
-  const best = findBestMove();
-  if (!best) return endGame('平局。棋盘已满。');
-  move(best.x, best.y, 2);
-  thinking = false;
-  if (checkWin(best.x, best.y, 2)) return endGame('AI 赢了。别急，这说明你防守漏了。');
-  statusEl.textContent = '轮到你。黑棋落子。';
-}
-
-function findBestMove() {
-  let best = null;
-  let bestScore = -Infinity;
-  const candidates = getCandidates();
-  for (const {x, y} of candidates) {
-    const attack = evaluatePoint(x, y, 2);
-    const defend = evaluatePoint(x, y, 1);
-    const centerBias = 20 - Math.hypot(x - size/2, y - size/2);
-    const score = Math.max(attack, defend * 1.08) + centerBias;
-    if (score > bestScore) {
-      bestScore = score;
-      best = {x, y};
-    }
-  }
-  return best;
-}
-
-function getCandidates() {
-  const set = new Set();
-  if (history.length === 0) return [{x: Math.floor(size/2), y: Math.floor(size/2)}];
-  for (const h of history) {
-    for (let dy = -2; dy <= 2; dy++) {
-      for (let dx = -2; dx <= 2; dx++) {
-        const x = h.x + dx, y = h.y + dy;
-        if (inBoard(x, y) && board[y][x] === 0) set.add(x + ',' + y);
-      }
-    }
-  }
-  return [...set].map(s => {
-    const [x, y] = s.split(',').map(Number);
-    return {x, y};
+[titleInput, durationSelect, styleSelect].forEach((control) => {
+  control.addEventListener('input', () => {
+    timeBadge.textContent = `${durationSelect.value}s`;
+    restartAnimation('参数已更新，预览已刷新。');
   });
-}
-
-function evaluatePoint(x, y, player) {
-  let score = 0;
-  const dirs = [[1,0],[0,1],[1,1],[1,-1]];
-  for (const [dx, dy] of dirs) {
-    const line = countLine(x, y, dx, dy, player);
-    score += patternScore(line.count, line.openEnds);
-  }
-  return score;
-}
-
-function countLine(x, y, dx, dy, player) {
-  let count = 1;
-  let openEnds = 0;
-  let nx = x + dx, ny = y + dy;
-  while (inBoard(nx, ny) && board[ny][nx] === player) { count++; nx += dx; ny += dy; }
-  if (inBoard(nx, ny) && board[ny][nx] === 0) openEnds++;
-  nx = x - dx; ny = y - dy;
-  while (inBoard(nx, ny) && board[ny][nx] === player) { count++; nx -= dx; ny -= dy; }
-  if (inBoard(nx, ny) && board[ny][nx] === 0) openEnds++;
-  return {count, openEnds};
-}
-
-function patternScore(count, openEnds) {
-  if (count >= 5) return 1000000;
-  if (count === 4 && openEnds === 2) return 200000;
-  if (count === 4 && openEnds === 1) return 60000;
-  if (count === 3 && openEnds === 2) return 15000;
-  if (count === 3 && openEnds === 1) return 3500;
-  if (count === 2 && openEnds === 2) return 1200;
-  if (count === 2 && openEnds === 1) return 250;
-  if (count === 1 && openEnds === 2) return 40;
-  return 5;
-}
-
-function checkWin(x, y, player) {
-  return [[1,0],[0,1],[1,1],[1,-1]].some(([dx, dy]) => {
-    return countLine(x, y, dx, dy, player).count >= 5;
-  });
-}
-
-function endGame(text) {
-  gameOver = true;
-  thinking = false;
-  statusEl.textContent = text;
-}
-
-function inBoard(x, y) {
-  return x >= 0 && y >= 0 && x < size && y < size;
-}
-
-restartBtn.addEventListener('click', init);
-sizeSelect.addEventListener('change', init);
-undoBtn.addEventListener('click', () => {
-  if (thinking || history.length === 0) return;
-  for (let i = 0; i < 2 && history.length; i++) {
-    const h = history.pop();
-    board[h.y][h.x] = 0;
-  }
-  gameOver = false;
-  statusEl.textContent = '已悔棋，轮到你。';
-  draw();
 });
-window.addEventListener('resize', () => { resizeBoard(); draw(); });
-init();
+
+playBtn.addEventListener('click', () => restartAnimation('正在循环预览视频效果。'));
+
+resetBtn.addEventListener('click', () => {
+  photoInput.value = '';
+  image = null;
+  if (imageUrl) URL.revokeObjectURL(imageUrl);
+  imageUrl = '';
+  downloadLink.style.display = 'none';
+  restartAnimation('已恢复默认画面。请选择照片继续。');
+});
+
+recordBtn.addEventListener('click', async () => {
+  if (!canvas.captureStream || typeof MediaRecorder === 'undefined') {
+    setStatus('当前浏览器不支持画布录制，请换用最新版 Chrome、Edge 或 Firefox。');
+    return;
+  }
+
+  recording = true;
+  playing = true;
+  downloadLink.style.display = 'none';
+  recordBtn.disabled = true;
+  setStatus('正在导出，请等待录制完成……');
+  animationStart = performance.now();
+
+  const stream = canvas.captureStream(30);
+  const chunks = [];
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? 'video/webm;codecs=vp9'
+    : 'video/webm';
+  const recorder = new MediaRecorder(stream, { mimeType });
+  recorder.ondataavailable = (event) => {
+    if (event.data.size > 0) chunks.push(event.data);
+  };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    downloadLink.href = url;
+    downloadLink.style.display = 'block';
+    recordBtn.disabled = false;
+    recording = false;
+    setStatus('视频已生成，点击绿色按钮下载 WebM 文件。');
+  };
+
+  recorder.start();
+  requestAnimationFrame(renderFrame);
+  setTimeout(() => recorder.stop(), Number(durationSelect.value) * 1000 + 180);
+});
+
+timeBadge.textContent = `${durationSelect.value}s`;
+requestAnimationFrame(renderFrame);
 </script>
 </body>
 </html>
